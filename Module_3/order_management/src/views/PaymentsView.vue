@@ -1,8 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 
+
+const createdAt = ref(new Date().toLocaleTimeString())
+
 // Simulate loading the payment audit workspace.
-await new Promise((resolve) => setTimeout(resolve, 2000))
+await new Promise((resolve) => setTimeout(resolve, 1000))
 
 const selectedPeriod = ref('Today')
 
@@ -40,9 +43,11 @@ function formatCurrency(amount) {
   <section class="workspace">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">FINANCE OPERATIONS</p>
         <h2>Payment Audit</h2>
-        <p class="section-description">Review payment outcomes and investigate exceptions.</p>
+        <p class="section-description">Review payment outcomes</p>
+        <p class="section-description">
+          Instance created at: <span style="color: var(--primary); font-weight: bold;">{{ createdAt }}</span>
+        </p>
       </div>
 
       <label class="period-select">
@@ -59,19 +64,18 @@ function formatCurrency(amount) {
       <article class="stat-card">
         <span class="stat-label">Captured Value</span>
         <strong>{{ formatCurrency(capturedValue) }}</strong>
-        <span class="stat-footnote">{{ selectedPeriod }} · sample data</span>
+        <span class="stat-footnote">{{ selectedPeriod }} - data</span>
       </article>
 
       <article class="stat-card">
         <span class="stat-label">Needs Review</span>
         <strong>{{ reviewCount }}</strong>
-        <span class="stat-footnote">Transactions requiring attention</span>
+      
       </article>
 
       <article class="stat-card">
         <span class="stat-label">Refunds</span>
         <strong>{{ refundCount }}</strong>
-        <span class="stat-footnote">Sample transaction count</span>
       </article>
     </div>
 
@@ -79,10 +83,8 @@ function formatCurrency(amount) {
       <div class="panel-toolbar">
         <div>
           <h3>Recent Transactions</h3>
-          <p class="muted-copy">Payment information is mock data for this learning POC.</p>
         </div>
 
-        <span class="view-chip">Read-only audit</span>
       </div>
 
       <div class="table-wrap">

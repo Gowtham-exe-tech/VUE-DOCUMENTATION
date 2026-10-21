@@ -1,0 +1,409 @@
+Options API: 
+    data(), methods, computed, and watch.
+Directives: 
+    v-if, v-for, v-model, and v-bind.
+Component communication: 
+    props and $emit.
+API integration: 
+    fetch(), async/await, and error handling.
+Vue Router: 
+    routes, RouterLink, and RouterView.
+
+
+# Vue.js 3 — Two-Day Learning Checklist
+
+## Day 1 — Fundamentals and Components
+
+### Module 1: Vue Basics and Setup
+- [ ] Understand what Vue.js is and why it is used.
+- [ ] Understand Vue 3 application architecture.
+- [ ] Create a Vue project using Vite.
+- [ ] Understand `main.js` and `App.vue`.
+- [ ] Understand Single File Components (SFCs).
+- [ ] Understand the `<template>`, `<script>`, and `<style>` sections.
+- [ ] Understand the Options API structure.
+- [ ] Build a counter application using `data()` and `methods`.
+
+### Module 2: Template Syntax and Directives
+- [ ] Display data using interpolation `{{ }}`.
+- [ ] Bind attributes using `v-bind` and `:`.
+- [ ] Handle events using `v-on` and `@`.
+- [ ] Conditionally render elements using `v-if`, `v-else-if`, and `v-else`.
+- [ ] Understand the difference between `v-if` and `v-show`.
+- [ ] Render lists using `v-for`.
+- [ ] Understand why `:key` is important.
+- [ ] Bind CSS classes dynamically.
+- [ ] Understand `v-once` and `v-html`.
+- [ ] Build a task list with dynamic status and conditional rendering.
+
+### Module 3: Options API
+- [ ] Understand `data()`.
+- [ ] Understand `methods`.
+- [ ] Understand `computed` properties.
+- [ ] Understand `watch`.
+- [ ] Understand the difference between `computed`, `watch`, and `methods`.
+- [ ] Understand how `this` accesses component properties.
+- [ ] Understand reactive data updates.
+- [ ] Build task creation and deletion functionality.
+- [ ] Calculate completed and remaining task counts.
+- [ ] Implement task search using a computed property.
+- [ ] Use a watcher to respond to changes in search input.
+
+### Module 4: Forms and Events
+- [ ] Understand `v-model`.
+- [ ] Handle text inputs and textareas.
+- [ ] Handle select elements.
+- [ ] Handle checkboxes and radio buttons.
+- [ ] Handle form submission.
+- [ ] Understand event modifiers such as `.prevent` and `.stop`.
+- [ ] Validate required fields.
+- [ ] Display validation error messages.
+- [ ] Build a task form with title, description, priority, and status.
+
+### Module 5: Components and Communication
+- [ ] Understand why components are used.
+- [ ] Create reusable `.vue` components.
+- [ ] Understand global and local component registration.
+- [ ] Understand parent and child components.
+- [ ] Pass data using `props`.
+- [ ] Understand prop types and required props.
+- [ ] Understand why children should not directly modify props.
+- [ ] Send events from child to parent using `$emit`.
+- [ ] Declare component events using `emits`.
+- [ ] Understand one-way data flow.
+- [ ] Build `TaskForm.vue`.
+- [ ] Build `TaskList.vue`.
+- [ ] Build `TaskItem.vue`.
+- [ ] Build `TaskStats.vue`.
+- [ ] Connect components using props and custom events.
+
+### Day 1 Completion
+- [ ] Build a working task manager using multiple components.
+- [ ] Add, delete, and complete tasks.
+- [ ] Display task statistics.
+- [ ] Search for tasks.
+- [ ] Explain how data flows between parent and child components.
+
+## Day 2 — Intermediate Vue Development
+
+### Module 6: Lifecycle Hooks
+- [ ] Understand the Vue component lifecycle.
+- [ ] Understand `beforeCreate` and `created`.
+- [ ] Understand `beforeMount` and `mounted`.
+- [ ] Understand `beforeUpdate` and `updated`.
+- [ ] Understand `beforeUnmount` and `unmounted`.
+- [ ] Know when to use lifecycle hooks.
+- [ ] Fetch initial data from `mounted()`.
+- [ ] Understand why DOM-dependent code should run after mounting.
+
+### Module 7: Vue Router
+- [ ] Install Vue Router.
+- [ ] Create a router configuration.
+- [ ] Define application routes.
+- [ ] Register the router in `main.js`.
+- [ ] Understand `RouterLink`.
+- [ ] Understand `RouterView`.
+- [ ] Create Dashboard, Tasks, and Habits pages.
+- [ ] Understand dynamic route parameters.
+- [ ] Read route parameters.
+- [ ] Understand programmatic navigation.
+- [ ] Handle unknown routes.
+
+### Module 8: API Integration
+- [ ] Understand Promises.
+- [ ] Understand `async` and `await`.
+- [ ] Make GET requests using `fetch()`.
+- [ ] Handle JSON responses.
+- [ ] Check HTTP response status using `response.ok`.
+- [ ] Handle API errors using `try...catch`.
+- [ ] Use `finally` to reset loading state.
+- [ ] Display loading indicators.
+- [ ] Display API error messages.
+- [ ] Display empty states.
+- [ ] Add a retry button.
+- [ ] Understand basic POST requests.
+- [ ] Fetch tasks when a component is mounted.
+
+### Module 9: Filtering, Sorting, and Local Storage
+- [ ] Filter tasks by status.
+- [ ] Search tasks by title.
+- [ ] Sort tasks by priority.
+- [ ] Combine search and filters.
+- [ ] Calculate task statistics using `computed`.
+- [ ] Understand `localStorage`.
+- [ ] Save data using `localStorage.setItem()`.
+- [ ] Retrieve data using `localStorage.getItem()`.
+- [ ] Convert JSON strings back into JavaScript data using `JSON.parse()`.
+- [ ] Understand deep watchers.
+- [ ] Persist tasks across browser refreshes.
+
+### Module 10: Intermediate Vue Concepts
+- [ ] Understand default and named slots.
+- [ ] Understand dynamic components using `<component :is="...">`.
+- [ ] Understand `KeepAlive`.
+- [ ] Understand `Teleport`.
+- [ ] Understand async components.
+- [ ] Understand the purpose and limitations of `Suspense`.
+- [ ] Understand provide/inject.
+- [ ] Understand custom directives.
+- [ ] Understand `nextTick()`.
+- [ ] Understand scoped CSS.
+
+### Module 11: Debugging and Code Maintenance
+- [ ] Inspect browser console errors.
+- [ ] Debug incorrect template bindings.
+- [ ] Debug event handlers that do not run.
+- [ ] Debug props and emitted events.
+- [ ] Debug incorrect `v-for` rendering.
+- [ ] Debug API request failures.
+- [ ] Debug computed properties.
+- [ ] Debug watchers.
+- [ ] Understand common reactivity mistakes.
+- [ ] Practice making a small change to an existing component.
+- [ ] Test existing functionality after making changes.
+
+### Final Project: Task Management Dashboard
+- [ ] Create the project structure.
+- [ ] Create reusable components.
+- [ ] Add tasks.
+- [ ] Edit tasks.
+- [ ] Delete tasks.
+- [ ] Mark tasks as completed.
+- [ ] Add search and filters.
+- [ ] Add task statistics.
+- [ ] Add form validation.
+- [ ] Add Vue Router navigation.
+- [ ] Fetch sample data from an API.
+- [ ] Add loading and error states.
+- [ ] Persist tasks using local storage.
+- [ ] Test the application.
+- [ ] Fix console errors.
+- [ ] Explain the application architecture and data flow.
+
+## Final Self-Review
+- [ ] I can create a Vue 3 project without following a tutorial.
+- [ ] I can write components using the Options API.
+- [ ] I understand `data()`, `methods`, `computed`, and `watch`.
+- [ ] I can use directives and handle form inputs.
+- [ ] I can pass props and emit events.
+- [ ] I can fetch API data and handle failures.
+- [ ] I can configure Vue Router.
+- [ ] I can debug common Vue errors.
+- [ ] I can read an existing Vue component and make changes safely.
+- [ ] I can explain the important parts of my project.
+
+
+
+--------------------------------------------------
+
+
+# Vue.js 3 — Mentor Roadmap Checklist
+
+**Target:** Vue 3 | JavaScript | Options API for practical implementation
+
+## Day 1 — Architecture, Reactivity, and Built-in Components
+
+### 1. Architecture & Component Design
+
+**Single File Components (SFCs)**
+- [ ] Understand the structure of `.vue` files.
+- [ ] Understand `<template>`, `<script>`, and `<style scoped>`.
+- [ ] Understand the difference between Options API and Composition API.
+- [ ] Recognize `<script setup>` and understand its purpose.
+- [ ] Create reusable components using the Options API.
+
+**Component Communication**
+- [ ] Understand parent-to-child communication using `props`.
+- [ ] Define props with types, defaults, and required options.
+- [ ] Understand child-to-parent communication using `$emit`.
+- [ ] Declare emitted events using `emits`.
+- [ ] Understand one-way data flow.
+- [ ] Build a parent component that manages data and child components that display it.
+
+**Slots System**
+- [ ] Understand default slots.
+- [ ] Understand named slots.
+- [ ] Understand scoped slots.
+- [ ] Pass custom template content into a reusable component.
+- [ ] Build a reusable card or modal component using slots.
+
+**Provide / Inject**
+- [ ] Understand why provide/inject is useful.
+- [ ] Pass data from an ancestor to a deeply nested component.
+- [ ] Understand the difference between props and provide/inject.
+- [ ] Understand reactive values provided to descendants.
+- [ ] Implement provide/inject using the Options API.
+
+### 2. Advanced Reactivity — Composition API Concepts
+
+**Ref vs. Reactive**
+- [ ] Understand what `ref()` does.
+- [ ] Understand what `reactive()` does.
+- [ ] Understand how primitive values and objects are handled.
+- [ ] Understand how Vue tracks changes to reactive data.
+- [ ] Recognize `.value` usage in Composition API JavaScript.
+- [ ] Understand when to use `ref()` versus `reactive()`.
+- [ ] Compare these concepts with `data()` in the Options API.
+
+**Computed & Watchers**
+- [ ] Understand cached computed values.
+- [ ] Understand `computed()` in the Composition API.
+- [ ] Understand `watch()` and its callback arguments.
+- [ ] Understand `watchEffect()`.
+- [ ] Understand the difference between computed properties and watchers.
+- [ ] Understand deep watchers and immediate execution.
+- [ ] Implement equivalent functionality using Options API `computed` and `watch`.
+
+**Custom Composables**
+- [ ] Understand what a composable is.
+- [ ] Understand the `useSomething()` naming convention.
+- [ ] Learn how composables reuse stateful logic.
+- [ ] Read a basic `useFetch()` composable.
+- [ ] Understand how composables differ from ordinary utility functions.
+- [ ] Recognize where composables fit into Composition API projects.
+
+**Shallow Reactivity**
+- [ ] Understand `shallowRef()`.
+- [ ] Understand `shallowReactive()`.
+- [ ] Compare shallow and deep reactivity.
+- [ ] Understand the use of shallow reactivity with large or immutable data.
+- [ ] Identify when shallow reactivity is unnecessary.
+
+### 3. Built-in Components & Templates
+
+**Dynamic Components**
+- [ ] Understand `<component :is="...">`.
+- [ ] Switch between components dynamically.
+- [ ] Pass props and listen for events on dynamic components.
+- [ ] Handle component switching in the Options API.
+
+**KeepAlive**
+- [ ] Understand component instance caching.
+- [ ] Preserve component state when switching between views.
+- [ ] Understand `include`, `exclude`, and `max`.
+- [ ] Recognize `activated()` and `deactivated()` lifecycle hooks.
+
+**Teleport**
+- [ ] Understand how Teleport changes the rendered DOM location.
+- [ ] Render modal content outside its normal DOM hierarchy.
+- [ ] Build a reusable modal using Teleport.
+- [ ] Understand how component ownership differs from DOM placement.
+
+**Suspense**
+- [ ] Understand async dependencies in Vue components.
+- [ ] Understand fallback content.
+- [ ] Understand how Suspense interacts with async components.
+- [ ] Recognize the limitations of Suspense and avoid relying on it without checking the Vue version and feature status.
+
+### Day 1 Practical Deliverable
+- [ ] Build a small component-based dashboard.
+- [ ] Use props and emitted events.
+- [ ] Create a reusable card or modal with slots.
+- [ ] Demonstrate provide/inject.
+- [ ] Switch between components dynamically.
+- [ ] Preserve component state using KeepAlive.
+- [ ] Display a modal using Teleport.
+- [ ] Demonstrate a loading fallback for an asynchronous component.
+
+## Day 2 — Ecosystem, Routing, State Management, and Production
+
+### 4. Ecosystem & Routing
+
+**Vue Router**
+- [ ] Install and configure Vue Router.
+- [ ] Define routes and render pages using RouterView.
+- [ ] Navigate using RouterLink.
+- [ ] Understand nested routes.
+- [ ] Understand dynamic route parameters.
+- [ ] Read route parameters.
+- [ ] Navigate programmatically.
+- [ ] Handle unknown routes.
+
+**Navigation Guards**
+- [ ] Understand global navigation guards.
+- [ ] Understand per-route guards.
+- [ ] Understand in-component navigation guards.
+- [ ] Use `beforeEach()` for route checks.
+- [ ] Understand authentication and authorization checks.
+- [ ] Redirect unauthenticated users.
+- [ ] Understand why frontend route guards do not replace backend authorization.
+
+**Pinia State Management**
+- [ ] Understand why global state management is useful.
+- [ ] Install and configure Pinia.
+- [ ] Create a store.
+- [ ] Understand state, getters, and actions.
+- [ ] Access a store from a component.
+- [ ] Update shared state through store actions.
+- [ ] Understand when component-local state is sufficient.
+- [ ] Compare Pinia with props, emits, and provide/inject.
+
+**Server-Side Rendering (SSR)**
+- [ ] Understand client-side rendering.
+- [ ] Understand server-side rendering.
+- [ ] Understand hydration.
+- [ ] Understand why SSR can help with initial rendering and SEO.
+- [ ] Understand the role of Nuxt.
+- [ ] Recognize common SSR considerations, including server/client differences.
+
+### 5. Tooling, Testing & Production
+
+**Vite Toolchain**
+- [ ] Understand Vite's role in development and production builds.
+- [ ] Understand the `package.json` scripts.
+- [ ] Configure environment variables.
+- [ ] Understand the `import.meta.env` API.
+- [ ] Configure import aliases.
+- [ ] Understand static assets and public assets.
+- [ ] Run a production build.
+- [ ] Preview the production build.
+
+**Testing**
+- [ ] Understand unit testing.
+- [ ] Understand component testing.
+- [ ] Understand end-to-end testing.
+- [ ] Recognize the roles of Vitest and Vue Test Utils.
+- [ ] Recognize the roles of Cypress and Playwright.
+- [ ] Write a basic test for a Vue component.
+- [ ] Test a component's rendered output.
+- [ ] Test a user interaction.
+- [ ] Understand the difference between isolated tests and browser-based E2E tests.
+
+**TypeScript Integration**
+- [ ] Understand why TypeScript is used in Vue projects.
+- [ ] Recognize TypeScript syntax in Vue components.
+- [ ] Understand typed props and event payloads.
+- [ ] Understand basic interfaces and type aliases.
+- [ ] Recognize how types are used with Pinia.
+- [ ] Understand how TypeScript differs from JavaScript.
+- [ ] Read basic TypeScript-based Vue code without needing to rewrite the project.
+
+**Performance Optimization**
+- [ ] Understand lazy-loaded routes.
+- [ ] Understand async component loading.
+- [ ] Understand code splitting.
+- [ ] Understand why large dependencies affect bundle size.
+- [ ] Understand production bundle analysis.
+- [ ] Recognize bundle visualizers.
+- [ ] Identify unnecessary component updates and expensive computations.
+- [ ] Understand when optimization is actually necessary.
+
+### Day 2 Practical Deliverable
+- [ ] Add nested routes to the dashboard.
+- [ ] Implement a basic navigation guard.
+- [ ] Create a Pinia store for shared task state.
+- [ ] Configure a Vite environment variable.
+- [ ] Create a production build.
+- [ ] Write at least one component test.
+- [ ] Add lazy loading to a route.
+- [ ] Explain SSR, TypeScript, and performance optimization at a basic level.
+
+## Final Review
+- [ ] Explain every major topic in my own words.
+- [ ] Implement the core component features using Options API.
+- [ ] Read and understand Composition API examples.
+- [ ] Identify which state belongs in a component and which belongs in Pinia.
+- [ ] Debug component communication and reactivity problems.
+- [ ] Navigate an existing Vue project and identify its architecture.
+- [ ] Explain the purpose of the tooling and testing libraries.
+- [ ] Identify topics that need further practice after the two-day sprint.

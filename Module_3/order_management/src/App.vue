@@ -66,19 +66,14 @@ function handleOrderDeleted(orderId) {
       <div class="brand-mark">OM</div>
 
       <div class="brand-copy">
-        <p class="eyebrow">OPERATIONS CONSOLE</p>
+        <!-- <p class="eyebrow">OPERATIONS CONSOLE</p> -->
         <h1>Order Management</h1>
       </div>
 
-      <div class="environment-badge">
-        <span></span>
-        Demo Environment
-      </div>
     </header>
 
     <section class="welcome-row">
       <div>
-        <p class="eyebrow">MODULE 03 · VUE BUILT-IN COMPONENTS</p>
         <h2>Keep the work moving.</h2>
         <p class="welcome-copy">
           Manage orders, customers, and payments from one workspace.
@@ -96,7 +91,6 @@ function handleOrderDeleted(orderId) {
         :class="{ active: activeTab === 'orders' }"
         @click="activeTab = 'orders'"
       >
-        <span class="tab-number">01</span>
         Orders
       </button>
 
@@ -104,7 +98,6 @@ function handleOrderDeleted(orderId) {
         :class="{ active: activeTab === 'customers' }"
         @click="activeTab = 'customers'"
       >
-        <span class="tab-number">02</span>
         Customers
       </button>
 
@@ -112,7 +105,6 @@ function handleOrderDeleted(orderId) {
         :class="{ active: activeTab === 'payments' }"
         @click="activeTab = 'payments'"
       >
-        <span class="tab-number">03</span>
         Payment Audit
       </button>
     </nav>
@@ -131,15 +123,18 @@ function handleOrderDeleted(orderId) {
 
         <template #fallback>
           <div class="suspense-fallback">
-            <div class="loading-spinner"></div>
-            <h2>Loading workspace...</h2>
-            <p>Please wait while the workspace loads.</p>
+            <h2>Preparing your workspace...</h2>
+            <div class="loading-progress">
+              <div class="loading-progress-bar"></div>
+            </div>
           </div>
         </template>
       </Suspense>
     </KeepAlive>
 
     <!-- Teleport renders the modal under body. -->
+
+    
     <DeleteOrderModal
       v-if="isDeleteModalOpen && selectedOrder"
       :order="selectedOrder"
@@ -148,8 +143,7 @@ function handleOrderDeleted(orderId) {
     />
 
     <footer class="app-footer">
-      <span>Vue 3 Learning POC</span>
-      <span>Dynamic Component · KeepAlive · Teleport · Suspense</span>
+      <span>Dynamic Component - KeepAlive - Teleport - Suspense</span>
     </footer>
   </main>
 </template>

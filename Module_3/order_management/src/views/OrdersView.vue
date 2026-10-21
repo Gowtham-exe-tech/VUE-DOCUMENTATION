@@ -1,8 +1,11 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
+
+const createdAt = ref(new Date().toLocaleTimeString())
+
 // Simulate asynchronous setup so Suspense can display its fallback.
-await new Promise((resolve) => setTimeout(resolve, 2000))
+await new Promise((resolve) => setTimeout(resolve, 1000))
 
 const emit = defineEmits(['request-delete'])
 
@@ -88,9 +91,11 @@ onUnmounted(() => {
   <section class="workspace">
     <div class="section-heading">
       <div>
-        <p class="eyebrow">ORDER OPERATIONS</p>
         <h2>Orders Workspace</h2>
         <p class="section-description">Search, review, and manage incoming orders.</p>
+        <p class="section-description">
+            Instance created at: <span style="color: var(--primary); font-weight: bold;">{{ createdAt }}</span>
+        </p>
       </div>
 
       <button class="button button-secondary" :disabled="isRefreshing" @click="refreshOrders">
@@ -102,19 +107,17 @@ onUnmounted(() => {
       <article class="stat-card">
         <span class="stat-label">Matching Orders</span>
         <strong>{{ filteredOrders.length }}</strong>
-        <span class="stat-footnote">Based on current filters</span>
+
       </article>
 
       <article class="stat-card">
         <span class="stat-label">Matching Order Value</span>
         <strong>{{ formatCurrency(totalValue) }}</strong>
-        <span class="stat-footnote">INR · filtered results</span>
       </article>
 
       <article class="stat-card">
         <span class="stat-label">Last Refreshed</span>
         <strong class="refresh-value">{{ lastRefreshed }}</strong>
-        <span class="stat-footnote">Demo refresh status</span>
       </article>
     </div>
 
@@ -122,7 +125,6 @@ onUnmounted(() => {
       <div class="panel-toolbar">
         <div>
           <h3>Order Register</h3>
-          <p class="muted-copy">Search and filter state should remain when switching tabs.</p>
         </div>
 
         <div class="filters">
@@ -172,7 +174,7 @@ onUnmounted(() => {
               <td class="align-right amount-cell">{{ formatCurrency(order.amount) }}</td>
               <td class="align-right">
                 <button class="small-action" @click="emit('request-delete', order)">
-                  Manage
+                  Delete
                 </button>
               </td>
             </tr>

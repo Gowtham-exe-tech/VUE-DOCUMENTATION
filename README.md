@@ -3357,24 +3357,1337 @@ Suspense coordinates supported async dependencies
 
 
 
-    <!-- Suspense handles the loading fallback for async views. -->
-    <Suspense :timeout="0">
-      <template #default>
-        <!-- KeepAlive preserves the selected view's component instance. -->
-        <KeepAlive :max="3">
-          <component
-            :is="dashboardViews[activeTab]"
-            :key="activeTab"
-            @request-delete="openDeleteModal"
-          />
-        </KeepAlive>
-      </template>
+# Module 4 — Ecosystem & Routing
 
-      <template #fallback>
-        <div class="suspense-fallback">
-          <div class="loading-spinner"></div>
-          <h2>Loading workspace...</h2>
-          <p>Please wait while the workspace loads.</p>
-        </div>
-      </template>
-    </Suspense>
+## POC — Order Management Portal
+
+The Order Management Portal is an application where employees can log in, view customer orders, check individual order details, and perform actions based on their permissions. Public visitors can also view product information.
+
+The application uses Nuxt, Vue, and Pinia.
+
+* Vue Router and Nuxt routing | Navigate between the orders dashboard, individual order pages, and login page.
+* Navigation Guards | Check whether an employee can access a protected page.
+* Pinia | Maintain shared information such as the logged-in user and order records.
+* Server-Side Rendering (SSR) | Render public product information on the server before sending the page to the browser.
+
+**Project structure**
+
+```text
+order-management-portal/
+├── components/
+│   └── AppHeader.vue
+├── layouts/
+│   └── default.vue
+├── middleware/
+│   ├── auth.ts
+│   └── manager.ts
+├── pages/
+│   ├── index.vue
+│   ├── login.vue
+│   ├── orders/
+│   │   ├── index.vue
+│   │   └── [orderId].vue
+│   └── products/
+│       └── [slug].vue
+├── stores/
+│   ├── auth.ts
+│   └── orders.ts
+└── nuxt.config.ts
+```
+
+The same application is used throughout the module. Each concept solves a different requirement in the portal, and the concepts work together to complete the user flow.
+
+## 1. Vue Router
+
+**Definition:** Vue Router is the official routing library for Vue. It maps URLs to Vue components and manages navigation between pages in a single-page application.
+
+In an order management application, opening `/orders` should display the order list, while opening `/orders/ORD-1001` should display the details for that particular order. The application needs a way to identify which component belongs to each URL.
+
+Vue Router provides this mapping. Nuxt builds on Vue Router and generates routes automatically from files in the `pages` directory.
+
+**File-based routing in the POC**
+
+```text
+pages/
+├── index.vue
+├── login.vue
+├── orders/
+│   ├── index.vue
+│   └── [orderId].vue
+└── products/
+    └── [slug].vue
+```
+
+Nuxt maps these files to routes:
+
+* `pages/index.vue` | `/`
+* `pages/login.vue` | `/login`
+* `pages/orders/index.vue` | `/orders`
+* `pages/orders/[orderId].vue` | `/orders/:orderId`
+* `pages/products/[slug].vue` | `/products/:slug`
+
+A company might have thousands of orders, but it does not need a separate Vue component for every order. One dynamic page can display different orders by reading their IDs from the URL.
+
+**Dynamic route matching**
+
+Dynamic route matching allows a single route component to handle URLs containing different parameter values.
+
+For example:
+
+```text
+/orders/ORD-1001
+/orders/ORD-1002
+/orders/ORD-1003
+```
+
+All three URLs use `pages/orders/[orderId].vue`.
+
+```vue
+<script setup lang="ts">
+import { useOrdersStore } from "~/stores/orders"
+
+definePageMeta({
+  middleware: "auth"
+})
+
+const route = useRoute()
+const ordersStore = useOrdersStore()
+
+const orderId = computed(() => String(route.params.orderId))
+
+const order = computed(() => {
+  return ordersStore.orders.find((item) => item.id === orderId.value)
+})
+</script>
+
+<template>
+  <section>
+    <NuxtLink to="/orders">Back to orders</NuxtLink>
+
+    <div v-if="order">
+      <h1>Order {{ order.id }}</h1>
+      <p>Customer: {{ order.customer }}</p>
+      <p>Total: ₹{{ order.total.toLocaleString("en-IN") }}</p>
+      <p>Status: {{ order.status }}</p>
+    </div>
+
+    <p v-else>Order not found.</p>
+  </section>
+</template>
+```
+
+`useRoute()` provides information about the current route. `route.params.orderId` reads the order ID from the URL.
+
+The `order` computed property searches the order store for a matching record. If the URL changes from `/orders/ORD-1001` to `/orders/ORD-1002`, the computed property can select the new order reactively.
+
+This is similar to using one filing system to retrieve many different customer records: the route parameter identifies the required record, while the component defines how that record should be displayed.
+
+The example reads locally stored demo data. In a production application, the page would usually request the order from a backend API, and the backend would verify that the current employee is allowed to view it.
+
+**Nested routes and layouts**
+
+Nested routing organizes related pages under a common route structure. For example, an order management section may contain an order list and individual order details.
+
+A layout provides shared UI around the active page. In this POC, the application header should remain visible while employees move between the orders dashboard and individual order details.
+
+`layouts/default.vue`
+
+```vue
+<template>
+  <div class="app-layout">
+    <AppHeader />
+    <main class="page-container">
+      <slot />
+    </main>
+  </div>
+</template>
+```
+
+Nuxt renders the active page inside `<slot />`. The header is defined once instead of being repeated in every page.
+
+This is useful when several pages share the same navigation, branding, or application controls. If the header needs an update, I can change one component rather than editing every page.
+
+**Programmatic navigation**
+
+Programmatic navigation changes the URL through application logic instead of requiring a user to click a navigation link.
+
+For example, after an employee successfully logs in, the application should redirect them to the orders dashboard.
+
+```ts
+const router = useRouter()
+
+async function openOrders() {
+  await router.push("/orders")
+}
+```
+
+In Nuxt, I can also use `navigateTo()`:
+
+```ts
+await navigateTo("/orders")
+```
+
+The POC can use `navigateTo()` after a successful login or `router.push()` when navigating from an order operation to a detail page.
+
+* `router.push()` | Adds a new entry to browser history.
+* `router.replace()` | Replaces the current history entry.
+* `router.back()` | Navigates to the previous history entry.
+* `navigateTo()` | Provides Nuxt navigation behavior.
+
+The difference matters when designing user flows. For example, replacing the login page in browser history can prevent the Back button from returning the user to a completed login form.
+
+## 2. Navigation Guards
+
+**Definition:** Navigation guards are functions that run during route navigation and determine whether navigation can continue, should be redirected, or should be canceled.
+
+In the Order Management Portal, public product information can be viewed without logging in, but the internal orders dashboard requires an authenticated employee.
+
+The application therefore needs a check before allowing navigation to a protected page. This is the job of navigation middleware.
+
+**Authentication and authorization**
+
+Authentication verifies who the user is. Authorization determines what the user is allowed to do.
+
+For example, an employee may be authenticated and allowed to view orders, while only a manager is authorized to approve them.
+
+These are separate checks. Having a valid login does not automatically grant permission to perform every action.
+
+**Implementing authentication middleware**
+
+Nuxt route middleware can run before a page navigation is completed.
+
+`middleware/auth.ts`
+
+```ts
+export default defineNuxtRouteMiddleware(() => {
+  const authStore = useAuthStore()
+
+  if (!authStore.user) {
+    return navigateTo("/login")
+  }
+})
+```
+
+The middleware reads the current user from Pinia.
+
+* If a user exists, the navigation can continue.
+* If no user exists, the application redirects to `/login`.
+
+To protect the order detail page, I add the middleware to its page metadata:
+
+```ts
+definePageMeta({
+  middleware: "auth"
+})
+```
+
+The same middleware can be applied to the orders dashboard. This avoids repeating the authentication check inside every page component.
+
+The navigation flow becomes:
+
+```text
+Employee opens /orders
+         |
+         v
+Authentication middleware
+         |
+         v
+Is the user authenticated?
+         |
+      +--+--+
+      |     |
+     Yes    No
+      |     |
+      v     v
+Show       Redirect
+orders     to /login
+```
+
+**Role-based access**
+
+The portal also has a manager-only operation. An employee should not be able to access the manager's page simply because they have logged in.
+
+`middleware/manager.ts`
+
+```ts
+export default defineNuxtRouteMiddleware(() => {
+  const authStore = useAuthStore()
+
+  if (!authStore.user) {
+    return navigateTo("/login")
+  }
+
+  if (authStore.user.role !== "manager") {
+    return navigateTo("/orders")
+  }
+})
+```
+
+A manager-only page can use both middleware functions:
+
+```ts
+definePageMeta({
+  middleware: ["auth", "manager"]
+})
+```
+
+The authentication middleware checks for a logged-in user, and the manager middleware checks the user's role.
+
+This is similar to an office where entering the building and entering a restricted department require different permissions.
+
+For a production application, the backend must enforce the same authorization rules on protected API endpoints. Client-side middleware can control navigation, but it cannot securely protect backend data by itself.
+
+**Other navigation guard types**
+
+Vue Router also supports global guards, per-route guards, and in-component guards.
+
+* Global guards | Apply navigation checks across the router. They are useful when many routes share the same authentication policy.
+* Per-route guards | Apply additional checks to particular routes.
+* In-component guards | Handle navigation decisions connected to the current component, such as preventing the loss of unsaved changes.
+
+For example, an order-editing page may warn an employee before they leave with unsaved changes:
+
+```ts
+import { onBeforeRouteLeave } from "vue-router"
+
+const hasUnsavedChanges = ref(false)
+
+onBeforeRouteLeave(() => {
+  if (!hasUnsavedChanges.value) {
+    return true
+  }
+
+  return window.confirm("Leave without saving your changes?")
+})
+```
+
+If the form has no unsaved changes, navigation continues. Otherwise, the browser asks the employee whether they want to leave.
+
+In a production form, I could replace the browser confirmation with a custom modal.
+
+## 3. Pinia State Management
+
+**Definition:** Pinia is the official state management library for Vue. It organizes shared reactive application data into stores that can be accessed by multiple components.
+
+In the Order Management Portal, the header needs the current employee's name, while the dashboard and order detail page need order information. Keeping separate copies of this data in each component could lead to inconsistent information.
+
+Pinia provides a centralized place for shared client-side state. Components using the same store can read reactive values and respond when those values change.
+
+**State, getters, and actions**
+
+* State | Stores information, such as the current user and order records.
+* Getters | Calculate values from state, such as the number of pending orders.
+* Actions | Perform operations, such as logging out or updating an order's status.
+
+**Authentication store**
+
+`stores/auth.ts`
+
+```ts
+import { defineStore } from "pinia"
+
+interface User {
+  id: string
+  name: string
+  role: "employee" | "manager"
+}
+
+export const useAuthStore = defineStore("auth", {
+  state: () => ({
+    user: null as User | null
+  }),
+
+  getters: {
+    isAuthenticated: (state) => Boolean(state.user),
+    isManager: (state) => state.user?.role === "manager"
+  },
+
+  actions: {
+    login(user: User) {
+      this.user = user
+    },
+
+    logout() {
+      this.user = null
+    }
+  }
+})
+```
+
+The `user` state stores the current user's information. The `isAuthenticated` getter derives whether a user is logged in, while `isManager` checks the user's role.
+
+The `login()` and `logout()` actions update the shared state.
+
+For example, after the login process succeeds, the application can update the store. The header and route middleware can then read the current user from the same store.
+
+This is similar to maintaining one shared employee register instead of allowing every department to maintain an unrelated copy.
+
+**Order store**
+
+`stores/orders.ts`
+
+```ts
+import { defineStore } from "pinia"
+
+interface Order {
+  id: string
+  customer: string
+  total: number
+  status: "Pending" | "Approved" | "Rejected"
+}
+
+export const useOrdersStore = defineStore("orders", {
+  state: () => ({
+    orders: [
+      {
+        id: "ORD-1001",
+        customer: "Arun Kumar",
+        total: 12500,
+        status: "Pending"
+      },
+      {
+        id: "ORD-1002",
+        customer: "Meena Raj",
+        total: 28500,
+        status: "Approved"
+      },
+      {
+        id: "ORD-1003",
+        customer: "Karthik S",
+        total: 8400,
+        status: "Rejected"
+      }
+    ] as Order[]
+  }),
+
+  getters: {
+    pendingOrders: (state) => {
+      return state.orders.filter((order) => order.status === "Pending")
+    },
+
+    totalOrderValue: (state) => {
+      return state.orders.reduce((total, order) => total + order.total, 0)
+    }
+  },
+
+  actions: {
+    updateStatus(orderId: string, status: Order["status"]) {
+      const order = this.orders.find((item) => item.id === orderId)
+
+      if (!order) {
+        throw new Error(`Order ${orderId} was not found`)
+      }
+
+      order.status = status
+    }
+  }
+})
+```
+
+The `orders` state stores the order records used in this demonstration.
+
+The `pendingOrders` getter filters the orders and returns only records with a pending status. The `totalOrderValue` getter calculates the combined value of all orders.
+
+The `updateStatus()` action finds an order by its ID and updates its status. If the order does not exist, it throws an error rather than silently pretending the operation succeeded.
+
+**Using the store in a page**
+
+```vue
+<script setup lang="ts">
+import { useOrdersStore } from "~/stores/orders"
+
+definePageMeta({
+  middleware: "auth"
+})
+
+const ordersStore = useOrdersStore()
+</script>
+
+<template>
+  <section>
+    <h1>Order Management</h1>
+
+    <p>Pending orders: {{ ordersStore.pendingOrders.length }}</p>
+
+    <p>
+      Total order value:
+      ₹{{ ordersStore.totalOrderValue.toLocaleString("en-IN") }}
+    </p>
+
+    <article v-for="order in ordersStore.orders" :key="order.id">
+      <h2>{{ order.id }}</h2>
+      <p>{{ order.customer }}</p>
+      <p>Status: {{ order.status }}</p>
+      <NuxtLink :to="`/orders/${order.id}`">View details</NuxtLink>
+    </article>
+  </section>
+</template>
+```
+
+The page reads data directly from the store instead of maintaining its own separate order list.
+
+The `v-for` directive renders each order. The `:key` attribute gives each rendered item a stable identity, and `NuxtLink` opens the corresponding dynamic detail route.
+
+If an action updates an order's status, components using the same store can reflect that change reactively.
+
+The example uses hardcoded records to demonstrate state management. A real application would load records from a backend and send updates through an API. Pinia manages the frontend state; it does not replace the database or make changes persistent by itself.
+
+**Important SSR consideration**
+
+Nuxt can render multiple incoming requests on the server. Shared mutable state must be managed correctly so that one user's information is never accidentally exposed to another user.
+
+The Pinia Nuxt integration supports SSR, but I should avoid manually reusing a single global mutable store instance across server requests.
+
+Authentication also needs additional care. A user stored only in in-memory Pinia state will lose that state after a full page refresh. A production application needs a secure session mechanism and server-side authentication checks.
+
+## 4. Server-Side Rendering (SSR)
+
+**Definition:** Server-Side Rendering is the process of generating a page's HTML on the server before sending the response to the browser.
+
+With client-side rendering, the browser usually receives the application shell and JavaScript, then executes the JavaScript to render the page. With SSR, the server can render the page's initial HTML before the browser receives it.
+
+In the Order Management Portal, public product pages are good candidates for SSR because visitors and search engines benefit from receiving meaningful product content in the initial HTML. Private order information, however, requires careful authentication and caching.
+
+**How SSR works in the POC**
+
+```text
+Visitor requests /products/keyboard-pro
+                  |
+                  v
+Nuxt matches the product route
+                  |
+                  v
+Fetch public product information
+                  |
+                  v
+Render product page HTML on server
+                  |
+                  v
+Send HTML to the browser
+                  |
+                  v
+Vue hydrates the rendered page
+                  |
+                  v
+Page becomes interactive
+```
+
+The server prepares the initial product page, including its name, description, and price. The browser can display that HTML before client-side hydration finishes.
+
+**Implementing the product page**
+
+`pages/products/[slug].vue`
+
+```vue
+<script setup lang="ts">
+const route = useRoute()
+
+const { data: product, status, error } = await useFetch(
+  () => `/api/products/${encodeURIComponent(String(route.params.slug))}`,
+  {
+    key: () => `product-${String(route.params.slug)}`
+  }
+)
+
+useSeoMeta({
+  title: () => product.value ? `${product.value.name} | Store` : "Product | Store",
+  description: () => product.value?.description ?? "View product details."
+})
+</script>
+
+<template>
+  <main>
+    <p v-if="status === 'pending'">Loading product...</p>
+
+    <p v-else-if="error">The product could not be loaded.</p>
+
+    <article v-else-if="product">
+      <h1>{{ product.name }}</h1>
+      <p>{{ product.description }}</p>
+      <p>Price: ₹{{ product.price.toLocaleString("en-IN") }}</p>
+    </article>
+
+    <p v-else>Product not found.</p>
+  </main>
+</template>
+```
+
+The route parameter identifies the requested product. For example, `/products/keyboard-pro` passes `keyboard-pro` as the slug.
+
+`useFetch()` retrieves the product data from the backend endpoint. When Nuxt renders the page on the server, it can fetch the data and include the result in the server-rendered response and hydration payload.
+
+`useSeoMeta()` sets metadata based on the product details, which helps provide relevant page information to search engines and social crawlers.
+
+The backend endpoint `/api/products/:slug` must exist and return a product with the expected fields. The page will not display real product information until that API is implemented.
+
+**Hydration**
+
+Hydration is the process in which Vue attaches client-side behavior to HTML that was already rendered by the server.
+
+For example, the product name and price may already be present in the HTML response. Vue then connects the page to its reactive state and event handlers so that it can respond to user interactions.
+
+The server and client should produce compatible initial markup. If the server renders one value but the client initially renders another, Vue can report a hydration mismatch.
+
+Common causes include:
+
+* Reading browser-only data such as `localStorage` during server rendering.
+* Rendering random values or current timestamps without keeping the initial output consistent.
+* Displaying different markup based on client-only state before hydration completes.
+
+I would keep server and client initial rendering consistent and move browser-only operations to an appropriate client-side lifecycle or utility.
+
+**Hybrid rendering**
+
+Nuxt supports different rendering strategies for different routes.
+
+* SSR | The server renders HTML for a request.
+* CSR | The browser renders the page using JavaScript.
+* Static generation | HTML is generated ahead of time.
+* Hybrid rendering | Different routes use different rendering or caching strategies.
+
+For example, public product pages might use SSR with suitable caching, while an internal dashboard might use client-side rendering if that better suits its requirements.
+
+A Nuxt configuration can illustrate these choices:
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@pinia/nuxt"],
+
+  routeRules: {
+    "/": { prerender: true },
+    "/products/**": { swr: 300 },
+    "/admin/**": { ssr: false }
+  }
+})
+```
+
+The home page is configured for prerendering. Product routes use a stale-while-revalidate caching strategy, while the admin routes disable SSR.
+
+The product caching strategy is suitable only if serving temporarily cached public content is acceptable. Private or user-specific information requires careful cache configuration to prevent data from being shared across users.
+
+Disabling SSR for an admin page does not secure the page. Authentication and authorization must still be enforced, and backend endpoints must verify every protected request.
+
+Nuxt brings these rendering options together with file-based routing, layouts, middleware, and data fetching, allowing the same application to use the approach that best fits each page.
+
+
+# Module 5 - Tooling, Testing & Production
+
+## 1. Vite Toolchain
+
+### What is Vite?
+
+Vite is a frontend build tool that starts a development server while working on the application and creates optimized static files for production.
+
+* During development, Vite serves source files and updates the browser when code changes.
+* During production build, Vite processes the application and creates optimized files inside `dist/`.
+* Vue handles component rendering; Vite handles the development and build pipeline around those components.
+
+In the Order Management Portal, Vue components are inside `src/`. Vite starts the app from `index.html`, loads `src/main.js`, and then Vue mounts `App.vue`.
+
+### Development flow
+
+`npm run dev` | Vite development server starts | `index.html` loads `src/main.js` | Vue mounts `App.vue` | router displays the requested view
+
+### Production build flow
+
+`npm run build` | Vite reads the app entry point | processes Vue, JavaScript, CSS and assets | creates optimized output in `dist/`
+
+The `dist/` folder is the deployable frontend output. Source files in `src/` are not copied as-is in every case; Vite processes and bundles the dependencies they use.
+
+### Vite configuration
+
+The configuration file is `vite.config.js`. It is used to customize Vite behavior, such as Vue support, import aliases and build plugins.
+
+```js
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url))
+    }
+  }
+});
+```
+
+* `defineConfig()` provides configuration support and editor hints.
+* `plugins: [vue()]` enables Vite to process Vue Single File Components such as `OrdersView.vue`.
+* `resolve.alias` creates a shorter path for imports.
+* `new URL("./src", import.meta.url)` identifies the `src` folder relative to the config file.
+* `fileURLToPath()` converts that file URL into a path Node can use.
+
+Without the alias, an import may look like this:
+
+```js
+import AppHeader from "../../components/AppHeader.vue";
+```
+
+With the alias, it can be written as:
+
+```js
+import AppHeader from "@/components/AppHeader.vue";
+```
+
+The alias changes how the import path is resolved. It does not move the file or change the component itself.
+
+### Environment variables
+
+Environment variables store configuration that can differ between development and production without editing the source code each time.
+
+Create `.env.development` in the project root:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000/api
+```
+
+Create `.env.production`:
+
+```env
+VITE_API_BASE_URL=https://api.example.com
+```
+
+Read the variable from `src/services/apiConfig.js`:
+
+```js
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+```
+
+* `import.meta.env` is the object Vite provides for environment information.
+* Vite exposes client-side variables prefixed with `VITE_`.
+* `.env.development` is used for development mode and `.env.production` for production mode.
+* Restart the development server after changing environment files so Vite reloads the configuration.
+
+Important: `VITE_` variables are included in frontend code and can be seen by users in the browser. Never put database passwords, private API keys, JWT signing secrets or other server-only secrets in them.
+
+In the current Order Management Portal, the data is stored in Pinia state rather than fetched from a real backend. `VITE_API_BASE_URL` becomes useful when an API is introduced; defining it does not automatically create an API connection.
+
+### Assets: imported files and public files
+
+Assets are static resources such as images, icons and fonts.
+
+* An asset imported from `src/` can be processed by Vite during the build.
+* A file inside `public/` is served from the root path and copied to the build output without being imported through JavaScript.
+
+Example of importing an asset:
+
+```js
+import logoUrl from "@/assets/logo.svg";
+```
+
+The imported `logoUrl` can then be used in a component:
+
+```vue
+<img :src="logoUrl" alt="Company logo" />
+```
+
+Example of a public asset:
+
+```html
+<img src="/company-logo.svg" alt="Company logo" />
+```
+
+Use imported assets when the application references the file through a component or module. Use `public/` for files that need a stable path or should be referenced directly by URL.
+
+### Build verification
+
+Run these commands from the project root:
+
+```bash
+npm run dev
+npm run build
+npm run preview
+```
+
+* `npm run dev` starts the local development server.
+* `npm run build` checks and bundles the app for production.
+* `npm run preview` serves the generated `dist/` build locally so the production output can be checked.
+
+A successful development server does not guarantee a successful production build. The build can reveal unresolved imports, syntax errors or other issues that need fixing before deployment.
+
+## 2. Unit Testing with Vitest
+
+### What is a unit test?
+
+A unit test checks one small piece of application behavior in isolation, such as a function, a Pinia store action or a computed value.
+
+For the Order Management Portal, the orders store is a useful first target because its filtering and status-update behavior can be tested without opening a browser.
+
+### Install Vitest
+
+Run:
+
+```bash
+npm install -D vitest @vue/test-utils jsdom
+```
+
+* `vitest` runs the tests.
+* `@vue/test-utils` provides tools for mounting Vue components in tests.
+* `jsdom` provides a simulated browser DOM for component tests.
+
+Add scripts to `package.json`, keeping the existing scripts as well:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
+  }
+}
+```
+
+`npm run test` starts Vitest in watch mode. `npm run test:run` runs the test suite once and exits, which is useful for a quick check or CI pipeline.
+
+### Configure Vitest
+
+Create `vitest.config.js` in the project root:
+
+```js
+import { defineConfig } from "vitest/config";
+import vue from "@vitejs/plugin-vue";
+import { fileURLToPath, URL } from "node:url";
+
+export default defineConfig({
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url))
+    }
+  },
+  test: {
+    environment: "jsdom",
+    clearMocks: true
+  }
+});
+```
+
+* `environment: "jsdom"` provides DOM APIs required by Vue component tests.
+* The Vue plugin allows the test/build toolchain to process `.vue` files.
+* The alias keeps imports such as `@/stores/orders` working in tests as they do in the app.
+* `clearMocks: true` clears mock call history between tests.
+
+If the project uses a different Vite config or an existing Vitest setup, keep the configuration consistent rather than creating conflicting duplicate settings.
+
+### Test the Pinia orders store
+
+A store test should verify observable behavior, not just whether a function exists.
+
+Create `src/stores/orders.test.js`:
+
+```js
+import { beforeEach, describe, expect, it } from "vitest";
+import { createPinia, setActivePinia } from "pinia";
+import { useOrdersStore } from "./orders";
+
+describe("Orders store", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  it("returns pending orders", () => {
+    const ordersStore = useOrdersStore();
+
+    expect(ordersStore.pendingOrders.length).toBe(2);
+  });
+
+  it("updates an existing order status", () => {
+    const ordersStore = useOrdersStore();
+
+    const updated = ordersStore.updateStatus("ORD-1001", "Processing");
+
+    expect(updated).toBe(true);
+    expect(ordersStore.getOrderById("ORD-1001").status).toBe("Processing");
+    expect(ordersStore.pendingOrders.length).toBe(1);
+  });
+
+  it("returns false when the order does not exist", () => {
+    const ordersStore = useOrdersStore();
+
+    const updated = ordersStore.updateStatus("ORD-9999", "Completed");
+
+    expect(updated).toBe(false);
+  });
+});
+```
+
+This example assumes the current store contains two Pending orders, has a `pendingOrders` getter, a `getOrderById()` helper and an `updateStatus()` action, and that `ORD-1001` starts as Pending. If the store's actual data or method names differ, adjust the test to match the current implementation instead of changing the application just to fit the example.
+
+* `describe()` groups tests around one feature.
+* `it()` describes one behavior the test expects.
+* `beforeEach()` creates a fresh Pinia instance before each test so state from one test does not leak into another.
+* `expect(...).toBe(...)` checks the actual result against the expected result.
+* The first test checks a getter.
+* The second checks both the action result and the changed store state.
+* The third checks the failure path when an order ID does not exist.
+
+### Run and read the tests
+
+```bash
+npm run test
+```
+
+To run once:
+
+```bash
+npm run test:run
+```
+
+A passing test means the tested behavior matched the expectation for that test case. It does not prove that the entire application is bug-free.
+
+If a test fails, check the first useful failure message, then verify the test setup, initial state, method names and expected values. Do not immediately change the expected value just to make the test pass; first decide whether the application or the test is incorrect.
+
+## 3. Vue Component Testing with Vue Test Utils
+
+### What is a component test?
+
+A component test checks how a Vue component behaves when it is mounted with particular props, events, state and child components.
+
+A store unit test can prove that `updateStatus()` changes an order. A component test can check that the Orders view renders the expected heading or responds to a user interaction.
+
+### Mounting a component
+
+`mount()` creates a Vue component instance for the test and returns a wrapper that can inspect rendered output and interact with it.
+
+Example:
+
+```js
+import { describe, expect, it } from "vitest";
+import { mount } from "@vue/test-utils";
+import OrdersView from "./OrdersView.vue";
+
+describe("Orders view", () => {
+  it("renders the orders heading", () => {
+    const wrapper = mount(OrdersView, {
+      global: {
+        stubs: {
+          RouterLink: {
+            template: "<a><slot /></a>"
+          }
+        }
+      }
+    });
+
+    expect(wrapper.text()).toContain("Orders");
+  });
+});
+```
+
+Save this test beside the view as `src/views/OrdersView.test.js` if the heading in the current view contains the word `Orders`.
+
+* `mount(OrdersView)` renders the view in a test environment.
+* `global.stubs` replaces `RouterLink` with a lightweight anchor so the test does not need a full router just to check static output.
+* `wrapper.text()` returns the rendered text.
+* `toContain()` checks that the expected text is present.
+
+If the view depends on Pinia, install a test Pinia instance when mounting it:
+
+```js
+import { createPinia } from "pinia";
+
+const wrapper = mount(OrdersView, {
+  global: {
+    plugins: [createPinia()],
+    stubs: {
+      RouterLink: {
+        template: "<a><slot /></a>"
+      }
+    }
+  }
+});
+```
+
+Use a real router when the behavior being tested depends on route navigation. Stub child components only when their own behavior is not part of the test.
+
+### Testing user interactions
+
+A component test can trigger a click and check the resulting behavior. For asynchronous updates, wait for Vue to finish applying its changes.
+
+```js
+await wrapper.get("button").trigger("click");
+expect(wrapper.text()).toContain("Updated");
+```
+
+This is only valid when the component actually has a button and the expected text appears after clicking it. Selectors and expected text must match the real component.
+
+Test the behavior a user can observe: visible text, disabled state, emitted events, form feedback or changed content. Avoid tests that only repeat the component's internal implementation details.
+
+## 4. End-to-End Testing with Playwright
+
+### What is an end-to-end test?
+
+An end-to-end (E2E) test checks a complete user flow through the running application, usually using a real browser. It can cover navigation, form interaction, visible results and the connection between multiple components.
+
+For this portal, a useful E2E flow is: open login page | choose Manager | sign in | open Admin page | verify the admin content.
+
+### Install Playwright
+
+```bash
+npm install -D @playwright/test
+npx playwright install
+```
+
+The first command installs Playwright's test runner. The second downloads the browser binaries used by Playwright.
+
+### Configure the browser test
+
+Create `playwright.config.js` in the project root:
+
+```js
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./e2e",
+  use: {
+    baseURL: "http://127.0.0.1:5173",
+    headless: true
+  },
+  webServer: {
+    command: "npm run dev -- --host 127.0.0.1",
+    url: "http://127.0.0.1:5173",
+    reuseExistingServer: !process.env.CI
+  }
+});
+```
+
+* `testDir` tells Playwright where to find E2E tests.
+* `baseURL` lets tests use paths such as `/login` instead of repeating the full address.
+* `webServer` starts Vite before the tests and waits for it to become available.
+* `reuseExistingServer` allows an already running local server to be reused outside CI.
+
+### Write a manager access test
+
+Create `e2e/manager-access.spec.js`:
+
+```js
+import { test, expect } from "@playwright/test";
+
+test("manager can open the admin page", async ({ page }) => {
+  await page.goto("/login");
+
+  await page.getByLabel("Demo role").selectOption("manager");
+  await page.getByRole("button", { name: /sign in|login/i }).click();
+
+  await page.getByRole("link", { name: /admin/i }).click();
+
+  await expect(page).toHaveURL(/admin/);
+  await expect(page.getByText(/admin/i).first()).toBeVisible();
+});
+```
+
+This test assumes the login view contains a label `Demo role`, a role option with value `manager`, a sign-in/login button, and a visible Admin link after login. If the actual label, option value, button text or route differs, update the selectors to match the real app.
+
+* `page.goto()` opens the login route.
+* `getByLabel()` finds a form control by its accessible label.
+* `selectOption()` chooses the manager role.
+* `getByRole()` targets an element by its accessible role and name.
+* `toHaveURL()` checks that navigation reached the admin route.
+* `toBeVisible()` verifies that admin content is visible to the user.
+
+Add a script to `package.json`:
+
+```json
+{
+  "scripts": {
+    "test:e2e": "playwright test"
+  }
+}
+```
+
+Run:
+
+```bash
+npm run test:e2e
+```
+
+### Unit test vs component test vs E2E test
+
+* **Unit test** | checks a small function or store behavior directly.
+* **Component test** | mounts a Vue component and checks its rendered behavior.
+* **E2E test** | drives the running application in a browser through a complete user journey.
+
+Use unit tests for lots of small behavior checks, component tests for UI behavior, and a smaller number of E2E tests for important journeys. E2E tests usually take longer and can fail for browser, server or selector reasons in addition to application bugs.
+
+## 5. TypeScript Integration
+
+### What is TypeScript?
+
+TypeScript is JavaScript with a static type system. It can report many type mismatches while writing or building the application instead of waiting for the affected code path to run.
+
+For the Order Management Portal, types can describe order data, allowed status values, component props, emitted event payloads and Pinia state.
+
+TypeScript does not replace runtime validation. Data received from an API is still external data and should be validated when correctness or security depends on its shape.
+
+### Add TypeScript support
+
+Install TypeScript and Vue's type-checking tool:
+
+```bash
+npm install -D typescript vue-tsc
+```
+
+Create `tsconfig.json`:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+}
+```
+
+* `strict: true` enables stricter type checking and helps catch missing or mismatched types.
+* `moduleResolution: "Bundler"` is suitable for modern Vite projects.
+* `types: ["vite/client"]` includes Vite's client-side type declarations.
+* `include` tells TypeScript to inspect the source files, including Vue SFCs through Vue's tooling.
+
+Add a type-check script:
+
+```json
+{
+  "scripts": {
+    "type-check": "vue-tsc --noEmit"
+  }
+}
+```
+
+Run `npm run type-check` to check types without emitting compiled files.
+
+### Define a type for order status and order data
+
+Create `src/types/order.ts`:
+
+```ts
+export type OrderStatus = "Pending" | "Processing" | "Completed" | "Cancelled";
+
+export interface Order {
+  id: string;
+  customerName: string;
+  productName: string;
+  quantity: number;
+  status: OrderStatus;
+}
+```
+
+The property names here are examples. Match them to the actual fields used by the existing orders store before applying the interface.
+
+* `OrderStatus` is a union type. It allows only the listed strings where this type is used.
+* `Order` describes the expected shape of an order object.
+* `quantity: number` means a string such as `"3"` does not satisfy the declared type.
+* `status: OrderStatus` prevents accidental values such as `"InProgress"` if that value is not part of the union.
+
+### Type component props and events
+
+In a Vue SFC, use `<script setup lang="ts">` to enable TypeScript syntax.
+
+```vue
+<script setup lang="ts">
+import type { Order, OrderStatus } from "@/types/order";
+
+const props = defineProps<{
+  order: Order;
+}>();
+
+const emit = defineEmits<{
+  statusChange: [orderId: string, status: OrderStatus];
+}>();
+
+function changeStatus(status: OrderStatus) {
+  emit("statusChange", props.order.id, status);
+}
+</script>
+```
+
+* `defineProps` declares what the parent must provide to the component.
+* `order: Order` means the `order` prop should match the `Order` interface.
+* `defineEmits` types the event name and its payload.
+* `changeStatus()` accepts only a valid `OrderStatus` value at compile time.
+* `emit()` sends the order ID and selected status to the parent.
+
+The parent still needs to listen for the event and perform the required update. Type declarations describe the contract; they do not automatically implement the behavior.
+
+### Type Pinia state and actions
+
+A typed store can use the same shared type definitions:
+
+```ts
+import { defineStore } from "pinia";
+import type { Order, OrderStatus } from "@/types/order";
+
+export const useOrdersStore = defineStore("orders", {
+  state: () => ({
+    orders: [] as Order[]
+  }),
+  actions: {
+    updateStatus(orderId: string, status: OrderStatus): boolean {
+      const order = this.orders.find((item) => item.id === orderId);
+
+      if (!order) {
+        return false;
+      }
+
+      order.status = status;
+      return true;
+    }
+  }
+});
+```
+
+This is an illustrative store shape, not a drop-in replacement for the current store if it uses different fields, getters or action names.
+
+* `orders: [] as Order[]` tells TypeScript the expected type of items in the array.
+* `orderId: string` and `status: OrderStatus` type the action arguments.
+* `: boolean` declares the return type.
+* A missing order returns `false`; a successful update changes the status and returns `true`.
+
+For an existing JavaScript project, TypeScript can be introduced gradually. Convert a small, well-understood piece first, then update the related imports and callers. Do not rename every file at once before the app's types and build checks are working.
+
+## 6. Performance Optimization
+
+### Lazy-loaded routes
+
+Lazy loading means downloading a route's component code when the route is needed rather than including every route component in the initial JavaScript bundle.
+
+In `src/router/index.js`, a normal eager import looks like:
+
+```js
+import OrdersView from "@/views/OrdersView.vue";
+```
+
+A lazy route can instead be configured like this:
+
+```js
+const routes = [
+  {
+    path: "/orders",
+    name: "orders",
+    component: () => import("@/views/OrdersView.vue")
+  },
+  {
+    path: "/admin",
+    name: "admin",
+    component: () => import("@/views/AdminView.vue")
+  }
+];
+```
+
+* `() => import(...)` returns a promise for the component module.
+* Vite can create separate JavaScript chunks for these route components.
+* When the user visits `/orders`, the router loads the Orders view chunk when needed.
+* When the user visits `/admin`, the Admin view chunk can be loaded separately.
+
+The first page may become lighter because it does not need to download every view immediately. However, a lazy-loaded view may show a small delay the first time it opens, depending on network and chunk size.
+
+A lazy route is different from `<KeepAlive>`. Lazy loading controls when component code is downloaded; `<KeepAlive>` caches a component instance after it has been rendered.
+
+### Async components
+
+Vue's `defineAsyncComponent()` allows a component to be loaded asynchronously.
+
+```vue
+<script setup>
+import { defineAsyncComponent } from "vue";
+
+const ReportsPanel = defineAsyncComponent(() =>
+  import("@/components/ReportsPanel.vue")
+);
+</script>
+
+<template>
+  <ReportsPanel />
+</template>
+```
+
+Use async components when a component is relatively expensive or only needed for a specific interaction. Avoid making every tiny component asynchronous without a reason, because too many chunks can make loading behavior harder to manage.
+
+Route lazy loading is often the most useful first step because separate pages are natural chunk boundaries.
+
+### Measure before optimizing
+
+Performance optimization should be based on evidence. A page that feels slow may be waiting for an API, rendering too many rows, loading a large JavaScript bundle or downloading oversized images. Each cause needs a different fix.
+
+Useful checks include:
+
+* Build the app and inspect bundle sizes.
+* Use browser DevTools Network to check which resources are large or slow.
+* Use the Performance panel when rendering or interaction feels slow.
+* Check whether large views are loaded before the user visits them.
+* Avoid optimizing based only on assumptions.
+
+### Bundle analysis with rollup-plugin-visualizer
+
+A bundle analyzer displays which modules contribute to the production bundle.
+
+Install it:
+
+```bash
+npm install -D rollup-plugin-visualizer
+```
+
+Update `vite.config.js`:
+
+```js
+import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { visualizer } from "rollup-plugin-visualizer";
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    visualizer({
+      filename: "dist/stats.html",
+      open: true,
+      gzipSize: true,
+      brotliSize: true
+    })
+  ],
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url))
+    }
+  }
+});
+```
+
+Run:
+
+```bash
+npm run build
+```
+
+* `filename` sets the report location.
+* `open: true` asks the plugin to open the report after the build.
+* `gzipSize` and `brotliSize` display compressed size estimates as well as module size information.
+
+The report helps identify large dependencies and chunks. A large module is not automatically a problem; check whether it is necessary, whether it can be lazy-loaded, and how much it affects the initial page load.
+
+## 7. Production checks for the Order Management Portal
+
+Before treating a frontend change as ready, check the relevant items:
+
+* `npm run build` completes successfully.
+* `npm run test:run` passes the unit and component tests.
+* `npm run test:e2e` passes the important browser flows, if E2E tests are configured.
+* `npm run type-check` passes, if TypeScript has been added.
+* Directly opening a nested route such as `/orders` works in the deployed hosting setup.
+* Environment variables are configured for the correct deployment environment.
+* No secrets are stored in `VITE_` variables.
+* The browser console and Network panel do not show avoidable errors.
+* The production build is checked with `npm run preview` before deployment.
+
+The current portal is a learning POC. Its demo role selection and frontend-only state are useful for practicing Vue architecture, but they are not secure authorization or persistent data storage. A real application must enforce authentication and permissions on the backend and store order changes in a persistent database.
